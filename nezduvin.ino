@@ -155,11 +155,11 @@ void number7(int n) {
   if (two) {
     spi('x');
   }
-  
+
   bool sig = false;
   for (int d = two?10:1000; d > 0; n %= d, d /= 10) {
     int digit = n / d;
-  
+
     if ((digit == 0) && (!sig)) {
       spi('x');
     } else {
@@ -167,7 +167,7 @@ void number7(int n) {
       sig = true;
     }
   }
-  
+
   if (two) {
     spi('x');
   }
