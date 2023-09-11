@@ -53,32 +53,22 @@ void setup() {
 
     pinMode(leds[i], OUTPUT);
     led(i, true);
-    ss(true);
-    bool sig = false;
-    int num = range_starts[i] * 100 + range_ends[i];
-    for (int d = 1000; d > 0; num %= d, d /= 10) {
-      int digit = num / d;
-      if ((digit == 0) && (!sig)) {
-        spi('x');
-      } else {
-        spi(digit);
-        sig = true;
-      }
-    }    
-
-    // Turns on the : in the middle of the seven-segment module
     
+    // Turns on the : in the middle of the seven-segment module
+
+    ss(true);
     spi(0x77);
     spi(0x10);
     ss(false);
+    number7(range_starts[i] * 100 + range_ends[i]);
+
     delay(500);
     led(i, false);
   }
 
   start = millis();
 
-  clear7();
-  send7("pLay");
+  play7();
 }
 
 void loop() {
@@ -97,10 +87,6 @@ void loop() {
 void pressed(int b) {
   clear7();
 
-  // On the first press use a combination of noise from A6 and A7 and 
-  // the time between the program start and now to seed the random number
-  // generator.
-  
   if (first_press) {
     int delta = millis() - start;
     seed *= delta;
@@ -119,34 +105,18 @@ void pressed(int b) {
       led(i % 6, true);
       delay(75);
       led(i % 6, false);
-
-      int num = random(range_starts[b], range_ends[b]+1);
-      bool sig = false;
-      ss(true);
-      spi('x');
-      for (int d = 10; d > 0; num %= d, d /= 10) {
-        int digit = num / d;
-        if ((digit == 0) && (!sig)) {
-          spi('x');
-        } else {
-          spi(digit);
-          sig = true;
-        }
-      }    
-      spi('x');
-      ss(false);
+      number7(random(range_starts[b], range_ends[b]+1));
     }
   }
   led(b, true);
 
   // Keep the chosen number on the display for a number of seconds and 
   // then turn off the display and the associated LED, and display the
-  // word PLAY.
+  // word PLAY
   
   delay(5000);
   led(b, false);
-  clear7();
-  send7("pLay");
+  play7();
 }
 
 // led turns on or off an LED
@@ -173,6 +143,42 @@ void send7(char *s) {
     spi(*s);
   }
   ss(false);
+}
+
+// number7 writes a number (up to 4 digits) to the seven-segment
+// display. If it's two digits then it's centered
+void number7(int n) {
+  bool two = (n < 100);
+
+  ss(true);
+
+  if (two) {
+    spi('x');
+  }
+  
+  bool sig = false;
+  for (int d = two?10:1000; d > 0; n %= d, d /= 10) {
+    int digit = n / d;
+  
+    if ((digit == 0) && (!sig)) {
+      spi('x');
+    } else {
+      spi(digit);
+      sig = true;
+    }
+  }
+  
+  if (two) {
+    spi('x');
+  }
+
+  ss(false);
+}
+
+// play7 shows the word PLAY on the seven-segment display
+void play7() {
+  clear7();
+  send7("pLay");
 }
 
 // spi sends a byte to the seven-segment display
