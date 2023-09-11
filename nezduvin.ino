@@ -53,7 +53,7 @@ void setup() {
 
     pinMode(leds[i], OUTPUT);
     led(i, true);
-    digitalWrite(SS, LOW);
+    ss(true);
     bool sig = false;
     int num = range_starts[i] * 100 + range_ends[i];
     for (int d = 1000; d > 0; num %= d, d /= 10) {
@@ -70,7 +70,7 @@ void setup() {
     
     spi(0x77);
     spi(0x10);
-    digitalWrite(SS, HIGH);
+    ss(false);
     delay(500);
     led(i, false);
   }
@@ -122,7 +122,7 @@ void pressed(int b) {
 
       int num = random(range_starts[b], range_ends[b]+1);
       bool sig = false;
-      digitalWrite(SS, LOW);
+      ss(true);
       spi('x');
       for (int d = 10; d > 0; num %= d, d /= 10) {
         int digit = num / d;
@@ -134,7 +134,7 @@ void pressed(int b) {
         }
       }    
       spi('x');
-      digitalWrite(SS, HIGH);
+      ss(false);
     }
   }
   led(b, true);
@@ -156,26 +156,31 @@ void led(int b, bool on) {
 
 // clear7 clears the seven-segment display
 void clear7() {
-  digitalWrite(SS, LOW);
+  ss(true);
   spi('v');
 
   // This clears all the dots and the colon
   
   spi(0x77);
   spi(0x00);
-  digitalWrite(SS, HIGH);
+  ss(false);
 }
 
 // send7 writes a string to the seven-segment display
 void send7(char *s) {
-  digitalWrite(SS, LOW);
+  ss(true);
   for (; *s != '\0'; s++) {
     spi(*s);
   }
-  digitalWrite(SS, HIGH);
+  ss(false);
 }
 
 // spi sends a byte to the seven-segment display
 void spi(byte b) {
   SPI.transfer(b);
+}
+
+// ss selects or deselects the seven-segment displays SPI interface
+void ss(bool enable) {
+  digitalWrite(SS, enable?LOW:HIGH);
 }
